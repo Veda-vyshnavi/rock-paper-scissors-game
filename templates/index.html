@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rock Paper Scissors</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Rock Paper Scissors</h1>
+        <p>Make your move!</p>
+        <div class="buttons">
+            <button class="rock" onclick="playGame('rock')">✊ Rock</button>
+            <button class="paper" onclick="playGame('paper')">✋ Paper</button>
+            <button class="scissors" onclick="playGame('scissors')">✌ Scissors</button>
+        </div>
+        <div id="result-card">
+            <h2>Result:</h2>
+            <div id="result"></div>
+            <div id="animation"></div> <!-- Container for the animation -->
+        </div>
+    </div>
+
+    <script>
+        async function playGame(userChoice) {
+            try {
+                const response = await fetch('/play', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ choice: userChoice }),
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    const resultElement = document.getElementById('result');
+                    const animationElement = document.getElementById('animation');
+
+                    resultElement.innerHTML = `
+                        <p>You chose: <strong>${result.player_choice}</strong></p>
+                        <p>Computer chose: <strong>${result.computer_choice}</strong></p>
+                        <p><strong>${result.result}</strong></p>
+                    `;
+
+                    // Determine which animation to display
+                    let animationSrc;
+                    if (result.result.includes("win")) {
+                        animationSrc = "https://lottie.host/d5082cca-2966-4daa-8f01-86d4b53404a4/AMO3DDfdZN.lottie";
+                    } else if (result.result.includes("lose")) {
+                        animationSrc = "https://lottie.host/e57f8c8e-40ec-473b-a758-288600b93926/h0EcIVo9jM.lottie";
+                    } else {
+                        animationSrc = "https://lottie.host/fda1b3ca-a61c-43c4-a812-771f5a3a7d00/gZqjqdL05B.lottie";
+                    }
+
+                    animationElement.innerHTML = `
+                        <dotlottie-player src="${animationSrc}" background="transparent" speed="1" style="width: 300px; height: 300px" loop autoplay></dotlottie-player>
+                    `;
+                } else {
+                    const error = await response.json();
+                    document.getElementById('result').innerHTML = `<p class="error">${error.message}</p>`;
+                }
+            } catch (err) {
+                document.getElementById('result').innerHTML = `<p class="error">An error occurred. Please try again later.</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
